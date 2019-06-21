@@ -1,16 +1,14 @@
 <template>
   <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </div>
     <router-view/>
   </div>
 </template>
 
 <style>
+@import url(//fonts.googleapis.com/earlyaccess/notosanstc.css);
+
 #app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  font-family: 'Noto Sans TC', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
@@ -28,4 +26,10 @@
 #nav a.router-link-exact-active {
   color: #42b983;
 }
+
+.container {
+    width: 100%;
+    padding-top: 30px;
+}
+
 </style>
