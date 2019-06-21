@@ -17,25 +17,7 @@ export default {
   components: {
     Navbar
   },
-  created() {
-    axios
-      .get("/v1/fs/", {
-        headers: {
-          Authorization: localStorage.getItem("access_token")
-        }
-      })
-      .then(response => {
-        console.log(response.data);
-        this.files = response.data.data;
-        this.$store.commit("setLoginStatus", true);
-        this.$router.push("/file");
-      })
-      .catch(error => {
-        console.log(error);
-        this.$store.commit("initStatus");
-        this.$router.push("/");
-      });
-  }
+  created() {}
 };
 </script>
 
