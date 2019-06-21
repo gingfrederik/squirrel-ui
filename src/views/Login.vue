@@ -48,20 +48,17 @@ export default {
   created() {
     axios
       .get("/v1/fs/", {
+        params: {
+          op: "info"
+        },
         headers: {
           Authorization: localStorage.getItem("access_token")
         }
       })
       .then(response => {
         console.log(response.data);
-        this.files = response.data.data;
         this.$store.commit("setLoginStatus", true);
         this.$router.push("/file");
-      })
-      .catch(error => {
-        console.log(error);
-        this.$store.commit("initStatus");
-        this.$router.push("/");
       });
   },
   methods: {

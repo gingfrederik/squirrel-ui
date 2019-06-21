@@ -17,7 +17,22 @@ export default {
   components: {
     Navbar
   },
-  created() {}
+  created() {
+    if (this.$store.state.loginStatus === true) {
+      this.$router.push("/file");
+    } else {
+      axios
+        .get("/v1/fs/", {
+          headers: {
+            Authorization: localStorage.getItem("access_token")
+          }
+        })
+        .then(response => {
+          console.log(response.data);
+          this.$router.push("/file");
+        });
+    }
+  }
 };
 </script>
 
