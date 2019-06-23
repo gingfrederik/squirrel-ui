@@ -1,12 +1,12 @@
 <template>
   <div class="policylist">
     <b-row align-h="end">
-      <b-col cols="auto" class="p-auto">
+      <b-col cols="auto" class="my-1">
         <b-button v-b-modal.modal-1>New</b-button>
       </b-col>
     </b-row>
 
-    <b-modal id="modal-1" ok-title="Add" title="New Policy" @ok="add">
+    <b-modal id="modal-1" ok-title="Add" title="New Policy" @hidden="resetModal" @ok="add">
       <b-row class="my-1">
         <b-col sm="2">
           <label for="input-default">Role:</label>
@@ -95,25 +95,27 @@ export default {
   methods: {
     del: function(data) {
       axios
-        .delete(
-          "/v1/ac/policy",
-          {
-            data: {
-              role: data[0],
-              path: data[1],
-              method: data[2]
-            },
-            headers: {
-              Authorization: localStorage.getItem("access_token")
-            }
+        .delete("/v1/ac/policy", {
+          data: {
+            role: data[0],
+            path: data[1],
+            method: data[2]
+          },
+          headers: {
+            Authorization: localStorage.getItem("access_token")
           }
-        )
+        })
         .then(response => {
           console.log(response.data);
           this.refresh();
         })
         .catch(error => {
           alert(error.response.data.message);
+          if (error.response.data.status === -2) {
+            localStorage.clear("access_token");
+            this.$router.push("/");
+            this.$store.commit("initStatus");
+          }
         });
     },
     add: function() {
@@ -137,6 +139,11 @@ export default {
         })
         .catch(error => {
           alert(error.response.data.message);
+          if (error.response.data.status === -2) {
+            localStorage.clear("access_token");
+            this.$router.push("/");
+            this.$store.commit("initStatus");
+          }
         });
     },
     refresh: function() {
@@ -152,7 +159,17 @@ export default {
         })
         .catch(error => {
           alert(error.response.data.message);
+          if (error.response.data.status === -2) {
+            localStorage.clear("access_token");
+            this.$router.push("/");
+            this.$store.commit("initStatus");
+          }
         });
+    },
+    resetModal: function() {
+      this.policy.role = "";
+      this.policy.path = "";
+      this.policy.method = "";
     }
   },
   computed: {}

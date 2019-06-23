@@ -1,15 +1,21 @@
 <template>
   <div class="rolelist">
     <b-row align-h="end">
-      <b-col cols="auto" class="p-auto">
+      <b-col cols="auto" class="my-1">
         <b-button v-b-modal.modal-new>New</b-button>
       </b-col>
-      <b-col cols="auto" class="p-auto">
+      <b-col cols="auto" class="my-1">
         <b-button v-b-modal.modal-add>Add</b-button>
       </b-col>
     </b-row>
 
-    <b-modal id="modal-new" ok-title="New" title="New role" @ok="add">
+    <b-modal
+      id="modal-new"
+      ok-title="New"
+      title="New role"
+      @hidden="resetModal"
+      @ok="add"
+    >
       <b-row class="my-1">
         <b-col sm="2">
           <label for="input-default">Role:</label>
@@ -32,7 +38,13 @@
       </b-row>
     </b-modal>
 
-    <b-modal id="modal-add" ok-title="Add" title="Add role for user" @ok="add">
+    <b-modal
+      id="modal-add"
+      ok-title="Add"
+      title="Add role for user"
+      @hidden="resetModal"
+      @ok="add"
+    >
       <b-row class="my-1">
         <b-col sm="2">
           <label for="input-default">Role:</label>
@@ -72,6 +84,7 @@
       ok-title="Del"
       ok-variant="danger"
       title="Delete role for user"
+      @hidden="resetModal"
       @ok="del"
     >
       <b-row class="my-1">
@@ -234,6 +247,11 @@ export default {
         })
         .catch(error => {
           alert(error.response.data.message);
+          if (error.response.data.status === -2) {
+            localStorage.clear("access_token");
+            this.$router.push("/");
+            this.$store.commit("initStatus");
+          }
         });
     },
     refresh: function() {
@@ -249,6 +267,11 @@ export default {
         })
         .catch(error => {
           alert(error.response.data.message);
+          if (error.response.data.status === -2) {
+            localStorage.clear("access_token");
+            this.$router.push("/");
+            this.$store.commit("initStatus");
+          }
         });
     },
     setDel: function(data) {
@@ -273,6 +296,12 @@ export default {
           return "";
         }
       });
+    },
+    resetModal: function() {
+      this.delRoleUser.role = "";
+      this.delRoleUser.user = "";
+      this.addRoleUser.role = "";
+      this.addRoleUser.user = "";
     }
   },
   computed: {}

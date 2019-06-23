@@ -1,8 +1,8 @@
 <template>
   <div class="filelist">
     <b-row>
-      <b-col md="6" class="my-1">
-        <b-form-group label-cols-sm="3" label="Filter" class="mb-0">
+      <b-col cols="4" class="my-1">
+        <b-form-group label-cols-sm="2" label="Filter" class="mb-0">
           <b-input-group>
             <b-form-input v-model="filter" placeholder="Type to filter"></b-form-input>
             <b-input-group-append>
@@ -11,8 +11,8 @@
           </b-input-group>
         </b-form-group>
       </b-col>
-      <b-col md="6" class="my-1">
-        <b-form-group label-cols-sm="3" label="Search" class="mb-0">
+      <b-col cols="4" class="my-1">
+        <b-form-group label-cols-sm="2" label="Search" class="mb-0">
           <b-input-group>
             <b-form-input placeholder="Type to search"></b-form-input>
             <b-input-group-append>
@@ -21,14 +21,23 @@
           </b-input-group>
         </b-form-group>
       </b-col>
-    </b-row>
-    <b-row align-h="end">
-      <b-col cols="auto" class="p-auto">
-        <b-button v-b-modal.modal-1>Upload</b-button>
+      <b-col cols="2" class="my-1">
+        <b-button v-b-modal.modal-newfolder>New Folder</b-button>
+      </b-col>
+      <b-col cols="2" class="my-1">
+        <b-button v-b-modal.modal-upload>Upload File</b-button>
       </b-col>
     </b-row>
 
-    <b-modal id="modal-1" title="Upload">
+    <b-modal id="modal-newfolder" title="New folder" @hidden="resetModal" @ok="handleNewFolder">
+      <b-row>
+        <b-col>
+          <b-form-input v-model="folderName" placeholder="Enter folder name"></b-form-input>
+        </b-col>
+      </b-row>
+    </b-modal>
+
+    <b-modal id="modal-upload" title="Upload">
       <vue-dropzone
         ref="myVueDropzone"
         id="dropzone"
@@ -46,12 +55,17 @@
       :sort-desc.sync="sortDesc"
     >
       <template slot="name" slot-scope="data">
+        <font-awesome-icon
+          v-if="data.item.type === 'dir' && data.item.name!='..'"
+          :icon="faFolder"
+        />
+        <font-awesome-icon v-else-if="data.item.type === 'file'" :icon="faFile"/>
         <a
           v-if="data.item.type === 'dir'"
           href="#"
           @click="toPath(data.item.name)"
-        >{{ data.item.name }}</a>
-        <a v-else>{{ data.item.name }}</a>
+        >&nbsp;{{ data.item.name }}</a>
+        <a v-else-if="data.item.type === 'file'">&nbsp;{{ data.item.name }}</a>
       </template>
       <template slot="size" slot-scope="data">
         <!-- `data.value` is the value after formatted by the Formatter -->
@@ -65,11 +79,11 @@
       </template>
       <template slot="actions" slot-scope="data">
         <b-row>
-          <b-col cols=3>
-            <b-button v-if="data.item.type != 'dir'" @click="download(data.item.name)">Download</b-button>
+          <b-col v-if="data.item.type != 'dir'" cols="4">
+            <b-button @click="download(data.item.name)">Download</b-button>
           </b-col>
-          <b-col cols=3>
-            <b-button variant="danger" @click="setDel(data.item.name)" v-b-modal.modal-2>Del</b-button>
+          <b-col cols="4">
+            <b-button variant="danger" @click="setDel(data.item.name)" v-b-modal.model-del>Del</b-button>
           </b-col>
         </b-row>
       </template>
@@ -78,7 +92,12 @@
       </template>
     </b-table>
 
-    <b-modal id="modal-2" title="Are you sure you want to delete?" @ok="handleDel"></b-modal>
+    <b-modal
+      id="model-del"
+      title="Are you sure you want to delete?"
+      @hidden="resetModal"
+      @ok="handleDel"
+    ></b-modal>
   </div>
 </template>
 
@@ -88,13 +107,19 @@ import moment from "moment";
 import vue2Dropzone from "vue2-dropzone";
 import "vue2-dropzone/dist/vue2Dropzone.min.css";
 
+import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+import { faFolder, faFile } from "@fortawesome/free-solid-svg-icons";
+
 export default {
   name: "Filelist",
   components: {
+    FontAwesomeIcon: FontAwesomeIcon,
     vueDropzone: vue2Dropzone
   },
   data() {
     return {
+      faFolder: faFolder,
+      faFile: faFile,
       apiHost: process.env.VUE_APP_API_HOST,
       dropzoneOptions: {
         url: "",
@@ -133,6 +158,7 @@ export default {
         }
       ],
       delFile: "",
+      folderName: "",
       files: [],
       breads: [],
       currentPath: "",
@@ -157,11 +183,19 @@ export default {
       })
       .catch(error => {
         alert(error.response.data.message);
-        this.$router.push("/");
+        console.log(error.response.data);
+        if (error.response.data.status === -2) {
+          localStorage.clear("access_token");
+          this.$router.push("/");
+          this.$store.commit("initStatus");
+        }
       });
   },
   methods: {
     toPath: function(path) {
+      if (this.currentPath === path) {
+        path = "";
+      }
       console.log("cpath", this.currentPath);
       console.log("path", path);
       axios
@@ -189,6 +223,16 @@ export default {
               };
               this.files.unshift(back);
             }
+          } else if (path === "") {
+            this.files = response.data.data;
+            if (this.currentPath != "") {
+              back = {
+                name: "..",
+                path: backPath,
+                type: "dir"
+              };
+              this.files.unshift(back);
+            }
           } else {
             var backPath = this.currentPath;
             this.currentPath += path + "/";
@@ -209,6 +253,11 @@ export default {
         })
         .catch(error => {
           alert(error.response.data.message);
+          if (error.response.data.status === -2) {
+            localStorage.clear("access_token");
+            this.$router.push("/");
+            this.$store.commit("initStatus");
+          }
         });
     },
     vsuccess() {
@@ -231,6 +280,11 @@ export default {
         })
         .catch(error => {
           alert(error.response.data.message);
+          if (error.response.data.status === -2) {
+            localStorage.clear("access_token");
+            this.$router.push("/");
+            this.$store.commit("initStatus");
+          }
         });
     },
     handleDel: function() {
@@ -247,7 +301,40 @@ export default {
         })
         .catch(error => {
           alert(error.response.data.message);
+          if (error.response.data.status === -2) {
+            localStorage.clear("access_token");
+            this.$router.push("/");
+            this.$store.commit("initStatus");
+          }
         });
+    },
+    handleNewFolder: function() {
+      axios
+        .post(
+          "/v1/fs/" + this.currentPath + this.folderName,
+          {},
+          {
+            headers: {
+              Authorization: localStorage.getItem("access_token")
+            }
+          }
+        )
+        .then(response => {
+          console.log(response.data);
+          this.toPath(this.currentPath);
+        })
+        .catch(error => {
+          alert(error.response.data.message);
+          if (error.response.data.status === -2) {
+            localStorage.clear("access_token");
+            this.$router.push("/");
+            this.$store.commit("initStatus");
+          }
+        });
+    },
+    resetModal: function() {
+      this.delFile = "";
+      this.folderName = "";
     },
     setDel: function(file) {
       this.delFile = file;
