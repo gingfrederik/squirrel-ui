@@ -80,10 +80,19 @@
       <template slot="actions" slot-scope="data">
         <b-row>
           <b-col v-if="data.item.type != 'dir'" cols="4">
-            <b-button @click="download(data.item.name)">Download</b-button>
+            <b-button @click="download(data.item.name)">
+              <font-awesome-icon :icon="faDownload"/>
+            </b-button>
           </b-col>
           <b-col cols="4">
-            <b-button variant="danger" @click="setDel(data.item.name)" v-b-modal.model-del>Del</b-button>
+            <b-button
+              v-if="data.item.name != '..'"
+              variant="danger"
+              @click="setDel(data.item.name)"
+              v-b-modal.model-del
+            >
+              <font-awesome-icon :icon="faTrashAlt"/>
+            </b-button>
           </b-col>
         </b-row>
       </template>
@@ -108,7 +117,12 @@ import vue2Dropzone from "vue2-dropzone";
 import "vue2-dropzone/dist/vue2Dropzone.min.css";
 
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-import { faFolder, faFile } from "@fortawesome/free-solid-svg-icons";
+import {
+  faFolder,
+  faFile,
+  faTrashAlt,
+  faDownload
+} from "@fortawesome/free-solid-svg-icons";
 
 export default {
   name: "Filelist",
@@ -120,6 +134,8 @@ export default {
     return {
       faFolder: faFolder,
       faFile: faFile,
+      faTrashAlt: faTrashAlt,
+      faDownload: faDownload,
       apiHost: process.env.VUE_APP_API_HOST,
       dropzoneOptions: {
         url: "",
