@@ -4,6 +4,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
+ARG VUE_BUILD_MODE
 RUN npm run build -- --mode ${VUE_BUILD_MODE}
 
 # production stage
