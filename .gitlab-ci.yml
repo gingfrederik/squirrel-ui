@@ -16,7 +16,7 @@ uat:
   stage: build
   image: docker:18.09.4
   only:
-    - dev
+    - uat
   tags:
     - docker
   script:
